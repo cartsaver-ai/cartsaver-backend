@@ -122,10 +122,20 @@ router.post('/sync', verifyToken, async (req, res) => {
       return res.status(404).json({ error: 'Shop not found' });
     }
 
+    if (!shop.accessToken) {
+      console.log('No access token found for shop:', shop.shop); // Debug log
+      return res.status(400).json({ error: 'Shop not properly authenticated with Shopify' });
+    }
+
     // Get abandoned checkouts from Shopify
     console.log('Fetching abandoned checkouts from Shopify...'); // Debug log
     const checkouts = await getAbandonedCheckouts(shop.shop, shop.accessToken, 50);
     console.log('Found checkouts:', checkouts.length); // Debug log
+    
+    if (!Array.isArray(checkouts)) {
+      console.error('Invalid response from Shopify API:', checkouts);
+      return res.status(500).json({ error: 'Failed to fetch abandoned carts from Shopify' });
+    }
     
     let syncedCount = 0;
     let errorCount = 0;

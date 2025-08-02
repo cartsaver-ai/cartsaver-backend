@@ -94,8 +94,17 @@ const getAbandonedCheckouts = async (shop, accessToken, limit = 50) => {
       limit: limit,
       status: 'open'
     });
+    
+    console.log('Shopify API response:', {
+      shop,
+      limit,
+      checkoutsCount: Array.isArray(checkouts) ? checkouts.length : 'not an array',
+      checkoutsType: typeof checkouts
+    });
+    
     return checkouts;
   } catch (error) {
+    console.error('Shopify API error:', error);
     throw new Error(`Failed to get abandoned checkouts: ${error.message}`);
   }
 };
