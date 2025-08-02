@@ -8,70 +8,49 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const app = express();
+app.set('trust proxy', 1); // for rate limiting behind Heroku
 
-// Trust proxy for rate limiting (needed when behind a proxy/load balancer)
-app.set('trust proxy', 1);
-
-// Import routes
-const authRoutes = require('./routes/auth');
-const shopifyRoutes = require('./routes/shopify');
-const cartRoutes = require('./routes/cart');
-const webhookRoutes = require('./routes/webhooks');
-const testRoutes = require('./routes/test');
-const founderCloningRoutes = require('./routes/founderCloning');
-const appRoutes = require('./routes/app');
-const activityRoutes = require('./routes/activities');
-
-// Define allowed origins
+// Allowed frontend origins
 const allowedOrigins = [
   'https://cartsaver-ai.netlify.app',
-  'http://localhost:3000',
-  'https://cartsaver-ai.herokuapp.com'
+  'http://localhost:3000'
 ];
 
-// Handle preflight requests early
-app.options('*', cors({
-  origin: allowedOrigins,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  optionsSuccessStatus: 204
-}));
-
-// Log preflight requests (for debugging)
-app.use((req, res, next) => {
-  if (req.method === 'OPTIONS') {
-    console.log('Preflight request:', req.originalUrl);
-  }
-  next();
-});
-
-// Apply CORS middleware globally
+// ✅ Proper CORS middleware
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   optionsSuccessStatus: 204
 }));
+
+// ✅ Handle preflight requests
+app.options('*', cors());
 
 // Middleware
-// app.use(helmet()); // Temporarily disable helmet for CORS testing
 app.use(compression());
 app.use(morgan('combined'));
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
-});
-app.use(limiter);
-
-// Body parsing middleware
+// app.use(helmet()); // Optional for now
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Health check endpoint
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100
+});
+app.use(limiter);
+
+// Health check
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'OK', 
@@ -80,7 +59,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Serve manifest.json for PWA support
+// Manifest + favicon
 app.get('/manifest.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.json({
@@ -100,28 +79,24 @@ app.get('/manifest.json', (req, res) => {
   });
 });
 
-// Serve favicon.ico
 app.get('/favicon.ico', (req, res) => {
-  res.status(204).end(); // No content response for favicon
+  res.status(204).end();
 });
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/shopify', shopifyRoutes);
-app.use('/api/cart', cartRoutes);
-app.use('/api/webhooks', webhookRoutes);
-app.use('/api/test', testRoutes);
-app.use('/api/founder-cloning', founderCloningRoutes);
-app.use('/api/app', appRoutes);
-app.use('/api/activities', activityRoutes);
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/shopify', require('./routes/shopify'));
+app.use('/api/cart', require('./routes/cart'));
+app.use('/api/webhooks', require('./routes/webhooks'));
+app.use('/api/test', require('./routes/test'));
+app.use('/api/founder-cloning', require('./routes/founderCloning'));
+app.use('/api/app', require('./routes/app'));
+app.use('/api/activities', require('./routes/activities'));
 
-// Error handling middleware
+// Error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    error: 'Something went wrong!',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
-  });
+  console.error('Server error:', err.message);
+  res.status(500).json({ error: 'Server error', message: err.message });
 });
 
 // 404 handler
@@ -129,7 +104,7 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// Database connection
+// MongoDB connection
 const connectDB = async () => {
   try {
     const mongoURI = process.env.NODE_ENV === 'production' 
@@ -140,9 +115,9 @@ const connectDB = async () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log('MongoDB connected successfully');
+    console.log('✅ MongoDB connected');
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    console.error('❌ MongoDB connection error:', error);
     process.exit(1);
   }
 };
@@ -152,11 +127,8 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   await connectDB();
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`CartSaver server running on port ${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🚀 CartSaver server running on port ${PORT}`);
   });
 };
 
 startServer();
-
-module.exports = app;
