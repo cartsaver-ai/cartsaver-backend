@@ -9,6 +9,11 @@ const jwt = require('jsonwebtoken');
 // Verify authentication token
 router.get('/verify', verifyToken, async (req, res) => {
   try {
+    // Add CORS headers explicitly
+    res.header('Access-Control-Allow-Origin', 'https://cartsaver-ai.netlify.app');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+    
     const shop = await Shop.findById(req.user.shopId);
     
     if (!shop) {
@@ -50,7 +55,7 @@ router.get('/install', async (req, res) => {
     
     // Use dynamic callback URL based on environment
     const redirectUri = process.env.NODE_ENV === 'production' 
-      ? `${process.env.SHOPIFY_APP_URL}/api/auth/callback`
+      ? 'https://cartsaver-ai.herokuapp.com/api/auth/callback'
       : 'http://localhost:5000/api/auth/callback';
     
     const authUrl = `https://${shopify}/admin/oauth/authorize?client_id=${process.env.SHOPIFY_API_KEY}&scope=${scopes}&redirect_uri=${redirectUri}&state=${shopify}`;
