@@ -16,28 +16,16 @@ const allowedOrigins = [
   'http://localhost:3000'
 ];
 
-// ✅ Simplified CORS middleware - allow all origins
-app.use(cors({
-  origin: true, // Allow all origins
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  optionsSuccessStatus: 204
-}));
-
-// ✅ Handle preflight requests
-app.options('*', cors());
-
-// ✅ Global CORS headers middleware
+// ✅ Disable CORS completely for debugging
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://cartsaver-ai.netlify.app');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', '*');
+  res.header('Access-Control-Allow-Headers', '*');
   res.header('Access-Control-Allow-Credentials', 'true');
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
-    res.status(204).end();
+    res.status(200).end();
     return;
   }
   
