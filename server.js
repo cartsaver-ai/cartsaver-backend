@@ -22,22 +22,43 @@ const founderCloningRoutes = require('./routes/founderCloning');
 const appRoutes = require('./routes/app');
 const activityRoutes = require('./routes/activities');
 
+// Define allowed origins
+const allowedOrigins = [
+  'https://cartsaver-ai.netlify.app',
+  'http://localhost:3000',
+  'https://cartsaver-ai.herokuapp.com'
+];
+
+// Handle preflight requests early
+app.options('*', cors({
+  origin: allowedOrigins,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  optionsSuccessStatus: 204
+}));
+
+// Log preflight requests (for debugging)
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    console.log('Preflight request:', req.originalUrl);
+  }
+  next();
+});
+
+// Apply CORS middleware globally
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  optionsSuccessStatus: 204
+}));
+
 // Middleware
 // app.use(helmet()); // Temporarily disable helmet for CORS testing
 app.use(compression());
 app.use(morgan('combined'));
-// More explicit CORS configuration
-app.use(cors({
-  origin: ['https://cartsaver-ai.netlify.app', 'http://localhost:3000', 'https://cartsaver-ai.herokuapp.com'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  preflightContinue: false,
-  optionsSuccessStatus: 204
-}));
-
-// Add explicit OPTIONS handling for preflight requests
-app.options('*', cors());
 
 // Rate limiting
 const limiter = rateLimit({
@@ -138,4 +159,4 @@ const startServer = async () => {
 
 startServer();
 
-module.exports = app; 
+module.exports = app;
