@@ -27,14 +27,10 @@ app.use(helmet());
 app.use(compression());
 app.use(morgan('combined'));
 app.use(cors({
-  origin: [
-    'http://localhost:3000', 
-    'https://cartsaver-ai.netlify.app',
-    'https://*.myshopify.com',
-    'https://admin.shopify.com',
-    'https://cartsaver-ai.herokuapp.com'
-  ],
-  credentials: true
+  origin: true, // Allow all origins for now
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 // Rate limiting
