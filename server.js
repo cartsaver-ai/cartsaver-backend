@@ -26,12 +26,18 @@ const activityRoutes = require('./routes/activities');
 // app.use(helmet()); // Temporarily disable helmet for CORS testing
 app.use(compression());
 app.use(morgan('combined'));
+// More explicit CORS configuration
 app.use(cors({
-  origin: true, // Allow all origins for now
+  origin: ['https://cartsaver-ai.netlify.app', 'http://localhost:3000', 'https://cartsaver-ai.herokuapp.com'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
+
+// Add explicit OPTIONS handling for preflight requests
+app.options('*', cors());
 
 // Rate limiting
 const limiter = rateLimit({
