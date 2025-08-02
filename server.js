@@ -10,33 +10,27 @@ require('dotenv').config();
 const app = express();
 app.set('trust proxy', 1); // for rate limiting behind Heroku
 
-// Allowed frontend origins
-const allowedOrigins = [
-  'https://cartsaver-ai.netlify.app',
-  'http://localhost:3000'
-];
+// ✅ Proper CORS configuration using cors package
+const corsOptions = {
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'https://cartsaver-ai.netlify.app',
+      'http://localhost:3000'
+    ];
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS not allowed'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  optionsSuccessStatus: 204
+};
 
-// ✅ Battle-tested CORS configuration
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept, Authorization'
-  );
-
-  // Handle preflight request
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
-  }
-
-  next();
-});
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // ✅ Explicitly handle preflight
 
 // Middleware
 app.use(compression());
