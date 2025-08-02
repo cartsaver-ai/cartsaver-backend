@@ -23,14 +23,14 @@ const appRoutes = require('./routes/app');
 const activityRoutes = require('./routes/activities');
 
 // Middleware
-app.use(helmet());
+// app.use(helmet()); // Temporarily disable helmet for CORS testing
 app.use(compression());
 app.use(morgan('combined'));
 app.use(cors({
   origin: true, // Allow all origins for now
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 }));
 
 // Rate limiting
