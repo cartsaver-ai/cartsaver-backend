@@ -31,7 +31,8 @@ app.use(cors({
     'http://localhost:3000', 
     'https://cartsaver-ai.netlify.app',
     'https://*.myshopify.com',
-    'https://admin.shopify.com'
+    'https://admin.shopify.com',
+    'https://cartsaver-ai.herokuapp.com'
   ],
   credentials: true
 }));
