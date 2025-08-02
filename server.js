@@ -28,6 +28,22 @@ app.use(cors({
 // ✅ Handle preflight requests
 app.options('*', cors());
 
+// ✅ Global CORS headers middleware
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'https://cartsaver-ai.netlify.app');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return;
+  }
+  
+  next();
+});
+
 // Middleware
 app.use(compression());
 app.use(morgan('combined'));
