@@ -50,7 +50,7 @@ router.get('/install', async (req, res) => {
     
     // Use dynamic callback URL based on environment
     const redirectUri = process.env.NODE_ENV === 'production' 
-      ? 'https://cartsaver-ai.herokuapp.com/api/auth/callback'
+      ? 'https://cartsaver-ai-b68a9cff0952.herokuapp.com/api/auth/callback'
       : 'http://localhost:5000/api/auth/callback';
     
     const authUrl = `https://${shopify}/admin/oauth/authorize?client_id=${process.env.SHOPIFY_API_KEY}&scope=${scopes}&redirect_uri=${redirectUri}&state=${shopify}`;
